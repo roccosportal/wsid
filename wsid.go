@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"log"
 	_ "github.com/mattn/go-sqlite3"
 	"database/sql"
@@ -32,6 +33,8 @@ func main() {
 		gogo(db)
 	} else if command == "show" {
 		show(db)
+	} else if command == "remove" {
+		remove(db, args)
 	} else {
 		fmt.Println("Command not found. Try help.")
 	}
@@ -53,8 +56,18 @@ func add(db  *sql.DB, args[]string ) {
 }
 
 // removes a thing
-func remove() {
+func remove(db  *sql.DB, args[]string) {
+	if len(args) != 2 {
+		fmt.Println("Not the right amount of argmuents")
+		return
+	}
+	id := args[1]
 
+	_, err := db.Exec("delete from things where id = ?", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Removed:", id)
 }
 
 func show(db  *sql.DB) {
@@ -93,7 +106,12 @@ func gogo(db  *sql.DB) {
 }
 
 func  connect() (db  *sql.DB) {
-	db, err := sql.Open("sqlite3", "./wsid.db")
+	usr, err := user.Current()
+    if err != nil {
+        log.Fatal( err )
+    }
+
+	db, err = sql.Open("sqlite3", usr.HomeDir + "/wsid.db")
 	if err != nil {
 		log.Fatal(err)
 	}
